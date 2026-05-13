@@ -77,5 +77,3 @@ jobs:
               issue_number: context.issue.number,
               body: `## 🤖 AI Code Review (Gemini 1.5 Flash)\n\n${review}`
             });
-
-прошу не ломая работы файла чуть переделай его, чтобы были отличия просто для вида
