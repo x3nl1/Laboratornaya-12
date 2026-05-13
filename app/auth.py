@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import jwt
 from passlib.context import CryptContext
 import os
@@ -6,7 +6,10 @@ import os
 SECRET_KEY = os.getenv("SECRET_KEY", "qwerty")
 ALGORITHM = "HS256"
 
-pwd_context = CryptContext(schemes=["bcrypt"])
+pwd_context = CryptContext(
+    schemes=["pbkdf2_sha256"],
+    deprecated="auto"
+)
 
 
 def hash_password(password):
@@ -19,5 +22,5 @@ def verify_password(password, hashed):
 
 def create_access_token(data: dict):
     payload = data.copy()
-    payload["exp"] = datetime.utcnow() + timedelta(hours=24)
+    payload["exp"] = datetime.now(timezone.utc) + timedelta(hours=24)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
