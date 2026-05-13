@@ -19,7 +19,7 @@ class Driver(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     car_model = Column(String)
-    plate_number = Column(String, unique=True)
+    plate_number = Column(String, unique=True, index=True)
     rating = Column(Float, default=5.0)
 
 
