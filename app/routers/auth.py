@@ -11,21 +11,20 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == user.email).first()
-
-    if existing:
-        raise HTTPException(400, "Email already exists")
-
-    db_user = User(
-        email=user.email,
-        password=hash_password(user.password)
-    )
-
-    db.add(db_user)
-    db.commit()
-
-    return {"message": "registered"}
-
+    try:
+        existing = db.query(User).filter(User.email == user.email).first()
+        if existing:
+            raise HTTPException(400, "Email already exists")
+        db_user = User(
+            email=user.email,
+            password=hash_password(user.password)
+        )
+        db.add(db_user)
+        db.commit()
+        return {"message": "registered"}
+    except Exception:
+        db.rollback()
+        raise
 
 @router.post("/login")
 def login(user: UserCreate, db: Session = Depends(get_db)):
