@@ -1,0 +1,54 @@
+name: AI Code Review
+
+on:
+  pull_request:
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install openai
+
+      - name: Get git diff
+        id: diff
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff origin/${{ github.base_ref }}...HEAD > diff.txt
+          echo "DIFF<<EOF" >> $GITHUB_ENV
+          head -c 8000 diff.txt >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: AI Review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python -c "
+import os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+diff = os.environ['DIFF']
+
+response = client.chat.completions.create(
+    model='gpt-4o-mini',
+    messages=[
+        {'role': 'system', 'content': 'Ты senior code reviewer. Найди уязвимости, логические ошибки, проблемы производительности, нарушения best practices.  
+Верни список проблем с объяснением и предложениями исправлений.'},
+        {'role': 'user', 'content': diff}
+    ]
+)
+
+print(response.choices[0].message.content)
+"
