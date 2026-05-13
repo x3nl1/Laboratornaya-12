@@ -16,7 +16,7 @@ def create_ride(ride: RideCreate, db: Session = Depends(get_db)):
         raise HTTPException(404, "Driver not found")
     if not db.query(Tariff).filter(Tariff.id == ride.tariff_id).first():
         raise HTTPException(404, "Tariff not found")
-    db_ride = Ride(**ride.dict())
+    db_ride = Ride(**ride.model_dump())
     db.add(db_ride)
     db.commit()
     return db_ride
