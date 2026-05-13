@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserCreate(BaseModel):
@@ -15,7 +15,7 @@ class DriverCreate(BaseModel):
 class RideCreate(BaseModel):
     pickup: str
     destination: str
-    price: float
+    price: float = Field(gt=0)
     user_id: int
     driver_id: int
     tariff_id: int
