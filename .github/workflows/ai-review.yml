@@ -33,12 +33,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate diff
+      - name: Get diff
         id: diff
         run: |
-          # используем --unified=3 для наглядности (ни на что не влияет)
-          git diff origin/${{ github.base_ref }}...HEAD --unified=3 -- '*.py' > code_diff.txt
-          echo "diff_size=$(wc -c < code_diff.txt)" >> $GITHUB_OUTPUT
+          git diff origin/${{ github.base_ref }}...HEAD -- '*.py' > code_diff.txt
+          echo "diff_size=$(wc -c < diff.txt)" >> $GITHUB_OUTPUT
 
       - name: AI code review via Gemini
         if: steps.diff.outputs.diff_size != '0'
@@ -48,7 +47,6 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            // читаем из нового имени файла, обрезаем до 8192 символов (было 8000)
             const diff = fs.readFileSync('code_diff.txt', 'utf8').slice(0, 8192);
 
             const response = await fetch(
@@ -59,19 +57,11 @@ jobs:
                 body: JSON.stringify({
                   contents: [{
                     parts: [{
-                      text: `Ты опытный Python-разработчик с фокусом на качество кода, производительность и безопасность. Проведи code review следующего diff.
+                      text: `Ты опытный Python-разработчик с фокусом на качество кода, производительность и безопасность. Проведи code review следующего diff. Верни список проблем (если они есть) с объяснением и предложениями по исправлению. Если diff чистый, напиши "✅ Замечаний нет.
 
-Особое внимание удели:
-- потенциальным уязвимостям
-- логическим ошибкам
-- узким местам в производительности
-- нарушению best practices (PEP8, идиомы Python)
-
-Верни список проблем (если они есть) с объяснением и предложениями по исправлению. Если diff чистый, напиши "✅ Замечаний нет".
-
-\`\`\`diff
-${diff}
-\`\`\``
+            \`\`\`diff
+            ${diff}
+            \`\`\``
                     }]
                   }]
                 })
